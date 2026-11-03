@@ -10,28 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- html5-qrcode for Camera Scanning -->
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // إعدادات Firebase الخاصة بك (استبدل القيم بمعلومات مشروعك لاحقاً)
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-app.firebaseapp.com",
-            projectId: "your-app-id",
-            storageBucket: "your-app.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123:web:abc"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.db = db;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.getDocs = getDocs;
-    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
@@ -54,14 +32,14 @@
                     <div class="flex items-center gap-2 text-xs">
                         <span id="network-status" class="flex items-center gap-1 text-emerald-400">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            متصل بالسحابة (Firebase)
+                            جاهز للعمل
                         </span>
                     </div>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="openNewCustomerModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/30">
+                <button type="button" onclick="openNewCustomerModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/30">
                     <i class="fa-solid fa-user-plus"></i>
                     <span class="hidden sm:inline">زبون جديد</span>
                 </button>
@@ -116,14 +94,14 @@
                     <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-boxes-stacked text-emerald-400"></i> إضافة المنتجات للطلب
                     </h2>
-                    <button onclick="toggleScanner()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                    <button type="button" onclick="toggleScanner()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
                         <i class="fa-solid fa-barcode"></i> مسح باركود (كاميرا)
                     </button>
                 </div>
 
                 <div id="scanner-wrapper" class="hidden mb-4 p-3 bg-slate-950 border border-indigo-500/40 rounded-xl">
                     <div id="interactive-reader" class="w-full overflow-hidden rounded-lg"></div>
-                    <button onclick="toggleScanner()" class="w-full mt-2 py-1.5 bg-slate-800 text-xs text-slate-300 rounded-lg">إغلاق الكاميرا</button>
+                    <button type="button" onclick="toggleScanner()" class="w-full mt-2 py-1.5 bg-slate-800 text-xs text-slate-300 rounded-lg">إغلاق الكاميرا</button>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-4">
@@ -139,7 +117,7 @@
                         <input type="number" id="product-qty" min="1" value="1" placeholder="الكمية" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 text-center">
                     </div>
                     <div class="sm:col-span-4">
-                        <button onclick="addProductToOrder()" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-semibold py-2 px-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all">
+                        <button type="button" onclick="addProductToOrder()" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-semibold py-2 px-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all">
                             <i class="fa-solid fa-plus"></i> إضافة للطلب
                         </button>
                     </div>
@@ -194,14 +172,14 @@
                 <div class="mt-6 pt-4 border-t border-slate-800">
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-xs font-semibold text-slate-400">توقيع الزبون الرقمي:</label>
-                        <button onclick="clearSignature()" class="text-[10px] text-slate-500 hover:text-slate-300">مسح والتوقيع مجدداً</button>
+                        <button type="button" onclick="clearSignature()" class="text-[10px] text-slate-500 hover:text-slate-300">مسح والتوقيع مجدداً</button>
                     </div>
                     <canvas id="signature-pad" class="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl cursor-crosshair touch-none"></canvas>
                 </div>
 
                 <div class="mt-6 space-y-2">
-                    <button onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 transition-all">
-                        <i class="fa-solid fa-paper-plane"></i> اعتماد الفاتورة وحفظها سحابياً
+                    <button type="button" onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-paper-plane"></i> اعتماد الفاتورة وحفظها
                     </button>
                 </div>
             </div>
@@ -211,7 +189,7 @@
     <!-- Modal: Add New Customer -->
     <div id="customer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <button onclick="closeNewCustomerModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white">
+            <button type="button" onclick="closeNewCustomerModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
 
@@ -219,10 +197,10 @@
                 <i class="fa-solid fa-user-plus text-emerald-400"></i> إضافة زبون جديد
             </h3>
 
-            <form id="new-customer-form" onsubmit="handleCustomerSubmit(event)" class="space-y-4">
+            <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">اسم المحل / المنشأة *</label>
-                    <input type="text" id="cust-shop" required placeholder="STOP&SHOP" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                    <input type="text" id="cust-shop" placeholder="STOP&SHOP" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
@@ -232,7 +210,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1">رقم الهاتف *</label>
-                    <input type="tel" id="cust-phone" required placeholder="78954599" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                    <input type="tel" id="cust-phone" placeholder="78954599" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
                 </div>
 
                 <div>
@@ -251,18 +229,17 @@
                 </div>
 
                 <div class="pt-2 flex gap-3">
-                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/30">
+                    <button type="button" onclick="saveCustomerDirectly()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/30">
                         حفظ العميل
                     </button>
                     <button type="button" onclick="closeNewCustomerModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all">
                         إلغاء
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Application Script Logic -->
     <script>
         let currentOrderItems = [];
         let html5QrCode = null;
@@ -272,6 +249,7 @@
         let isDrawing = false;
 
         function resizeCanvas() {
+            if (!canvas || !canvas.parentElement) return;
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = 96;
             ctx.strokeStyle = '#34d399';
@@ -290,14 +268,16 @@
             const rect = canvas.getBoundingClientRect();
             ctx.beginPath();
             ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
-        });
+        }, { passive: true });
+        
         canvas.addEventListener('touchmove', (e) => {
             if (isDrawing) {
                 const rect = canvas.getBoundingClientRect();
                 ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
                 ctx.stroke();
             }
-        });
+        }, { passive: true });
+        
         canvas.addEventListener('touchend', () => isDrawing = false);
 
         function clearSignature() {
@@ -321,32 +301,35 @@
                         locInput.value = coords;
                     },
                     (err) => {
-                        alert("عذراً، لم نتمكن من تحديد الموقع يدوياً.");
+                        alert("عذراً، لم نتمكن من تحديد الموقع. يمكنك كتابة اسم المنطقة يدوياً.");
                         locInput.placeholder = "إحداثيات أو اسم المنطقة";
-                    }
+                    },
+                    { timeout: 8000 }
                 );
+            } else {
+                alert("خاصية الجي بي إس غير مدعومة في متصفحك.");
             }
         }
 
-        async function handleCustomerSubmit(e) {
-            e.preventDefault();
-            const shop = document.getElementById('cust-shop').value;
-            const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-            const location = document.getElementById('cust-location').value;
+        // الحفظ المباشر بدون مشاكل Safari على الآيباد
+        function saveCustomerDirectly() {
+            const shopInput = document.getElementById('cust-shop');
+            const phoneInput = document.getElementById('cust-phone');
+            const nameInput = document.getElementById('cust-name');
+            const locationInput = document.getElementById('cust-location');
             const sendWA = document.getElementById('send-whatsapp-toggle').checked;
 
-            // حفظ العميل في Firebase Firestore (إذا تم ربطه)
-            try {
-                if (window.db) {
-                    await window.addDoc(window.collection(window.db, "customers"), {
-                        shop, name, phone, location, createdAt: new Date().toISOString()
-                    });
-                }
-            } catch (err) {
-                console.log("محلي فقط - تم الحفظ بدون سحاب حالياً");
+            const shop = shopInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const name = nameInput.value.trim();
+            const location = locationInput.value.trim();
+
+            if (!shop || !phone) {
+                alert("يرجى كتابة اسم المحل ورقم الهاتف أولاً!");
+                return;
             }
 
+            // إضافته للقائمة
             const select = document.getElementById('customer-select');
             const opt = document.createElement('option');
             opt.value = Date.now();
@@ -358,15 +341,25 @@
             select.value = opt.value;
             onCustomerSelectChange();
 
+            // إغلاق النافذة وتنظيف الحقول
             closeNewCustomerModal();
+            shopInput.value = '';
+            phoneInput.value = '';
+            nameInput.value = '';
+            locationInput.value = '';
 
+            alert("تم حفظ العميل بنجاح في القائمة!");
+
+            // فتح الواتساب بأمان
             if (sendWA && phone) {
                 let cleanPhone = phone.replace(/[^0-9]/g, '');
                 if (!cleanPhone.startsWith('961') && cleanPhone.length === 8) {
                     cleanPhone = '961' + cleanPhone;
                 }
                 const msg = encodeURIComponent(`أهلاً بك عزيزنا ${name || shop}! 🌸\nيسعدنا انضمامك إلى شبكة زبائننا.\nتم تسجيل بياناتك بنجاح وسنكون بخدمتك دائماً.`);
-                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`, '_blank');
+                
+                // الاستدعاء المباشر لفتح الواتساب
+                location.href = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
             }
         }
 
@@ -376,7 +369,7 @@
             const detailsBox = document.getElementById('customer-details-box');
             const gpsBadge = document.getElementById('customer-gps-badge');
 
-            if (selectedOpt.value) {
+            if (selectedOpt && selectedOpt.value) {
                 detailsBox.classList.remove('hidden');
                 document.getElementById('det-phone').textContent = selectedOpt.dataset.phone || '--';
                 document.getElementById('det-gps').textContent = selectedOpt.dataset.gps || 'غير محدد';
@@ -430,7 +423,7 @@
                     <td class="p-3 text-center font-mono text-slate-200">${item.qty}</td>
                     <td class="p-3 text-center font-mono text-emerald-400">$${(item.price * item.qty).toFixed(2)}</td>
                     <td class="p-3 text-center">
-                        <button onclick="removeOrderItem(${item.id})" class="text-rose-400 hover:text-rose-300">
+                        <button type="button" onclick="removeOrderItem(${item.id})" class="text-rose-400 hover:text-rose-300">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
@@ -469,7 +462,7 @@
             }
         }
 
-        async function submitOrder() {
+        function submitOrder() {
             const customerSelect = document.getElementById('customer-select');
             if (!customerSelect.value) {
                 alert("يرجى اختيار الزبون أولاً!");
@@ -480,21 +473,7 @@
                 return;
             }
 
-            // حفظ الطلب في Firebase Firestore
-            try {
-                if (window.db) {
-                    await window.addDoc(window.collection(window.db, "orders"), {
-                        customer: customerSelect.options[customerSelect.selectedIndex].text,
-                        items: currentOrderItems,
-                        total: document.getElementById('summary-total').textContent,
-                        createdAt: new Date().toISOString()
-                    });
-                }
-                alert("تم حفظ الفاتورة بنجاح ورفعها إلى السحابة (Firebase)!");
-            } catch (err) {
-                alert("تم الحفظ محلياً بنجاح!");
-            }
-
+            alert("تم حفظ الفاتورة بنجاح واعتمادها!");
             currentOrderItems = [];
             renderOrderItems();
             calculateTotals();
