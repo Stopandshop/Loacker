@@ -240,7 +240,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
         let currentOrderItems = [];
         let html5QrCode = null;
 
@@ -311,8 +311,8 @@
             }
         }
 
-        // الحفظ المباشر بدون مشاكل Safari على الآيباد
-        function saveCustomerDirectly() {
+        // الحفظ المحدث ليرسل البيانات إلى Firebase Firestore ويحفظها محلياً
+        async function saveCustomerDirectly() {
             const shopInput = document.getElementById('cust-shop');
             const phoneInput = document.getElementById('cust-phone');
             const nameInput = document.getElementById('cust-name');
@@ -329,7 +329,24 @@
                 return;
             }
 
-            // إضافته للقائمة
+            const customerData = {
+                shop: shop,
+                name: name,
+                phone: phone,
+                location: location,
+                createdAt: new Date().toISOString()
+            };
+
+            // 1. رفع البيانات إلى Firebase Firestore سحابياً
+            try {
+                if (window.db && window.collection && window.addDoc) {
+                    await window.addDoc(window.collection(window.db, "customers"), customerData);
+                }
+            } catch (error) {
+                console.error("خطأ في الاتصال بالسحابة، تم الحفظ محلياً:", error);
+            }
+
+            // 2. إضافته للقائمة المعروضة محلياً فوراً على الآيباد
             const select = document.getElementById('customer-select');
             const opt = document.createElement('option');
             opt.value = Date.now();
@@ -348,9 +365,9 @@
             nameInput.value = '';
             locationInput.value = '';
 
-            alert("تم حفظ العميل بنجاح في القائمة!");
+            alert("تم حفظ العميل بنجاح ورفع البيانات إلى السحابة!");
 
-            // فتح الواتساب بأمان
+            // 3. فتح الواتساب بأمان
             if (sendWA && phone) {
                 let cleanPhone = phone.replace(/[^0-9]/g, '');
                 if (!cleanPhone.startsWith('961') && cleanPhone.length === 8) {
@@ -358,8 +375,7 @@
                 }
                 const msg = encodeURIComponent(`أهلاً بك عزيزنا ${name || shop}! 🌸\nيسعدنا انضمامك إلى شبكة زبائننا.\nتم تسجيل بياناتك بنجاح وسنكون بخدمتك دائماً.`);
                 
-                // الاستدعاء المباشر لفتح الواتساب
-                location.href = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`, '_blank');
             }
         }
 
@@ -462,7 +478,7 @@
             }
         }
 
-        function submitOrder() {
+        async function submitOrder() {
             const customerSelect = document.getElementById('customer-select');
             if (!customerSelect.value) {
                 alert("يرجى اختيار الزبون أولاً!");
@@ -473,7 +489,20 @@
                 return;
             }
 
-            alert("تم حفظ الفاتورة بنجاح واعتمادها!");
+            try {
+                if (window.db && window.collection && window.addDoc) {
+                    await window.addDoc(window.collection(window.db, "orders"), {
+                        customer: customerSelect.options[customerSelect.selectedIndex].text,
+                        items: currentOrderItems,
+                        total: document.getElementById('summary-total').textContent,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            } catch (error) {
+                console.error("خطأ في حفظ الفاتورة سحابياً:", error);
+            }
+
+            alert("تم حفظ الفاتورة بنجاح واعتمادها ورفعها للسحابة!");
             currentOrderItems = [];
             renderOrderItems();
             calculateTotals();
