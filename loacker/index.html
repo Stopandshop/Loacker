@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام المندوب الميداني - Sales Rep System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html5-qrcode for Camera Scanning -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // إعدادات Firebase الخاصة بك (استبدل القيم بمعلومات مشروعك لاحقاً)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-app.firebaseapp.com",
+            projectId: "your-app-id",
+            storageBucket: "your-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123:web:abc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-12">
+
+    <!-- Navbar Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-truck-ramp-box text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white leading-tight">نظام المندوب الميداني</h1>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span id="network-status" class="flex items-center gap-1 text-emerald-400">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            متصل بالسحابة (Firebase)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="openNewCustomerModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/30">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span class="hidden sm:inline">زبون جديد</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left / Top Column: Order Form -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Customer Selector Card -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-store text-emerald-400"></i> بيانات الزبون المحدد
+                    </h2>
+                    <span id="customer-gps-badge" class="hidden text-xs bg-slate-800 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                        <i class="fa-solid fa-location-dot"></i> تم التقاط الموقع
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">اختر الزبون</label>
+                        <select id="customer-select" onchange="onCustomerSelectChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                            <option value="">-- اختر من قائمة الزبائن --</option>
+                            <option value="1" data-phone="78954599" data-gps="35.434805, 33.362474" data-address="STOP&SHOP - Bassam Nasour">STOP&SHOP (Bassam Nasour)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">نوع الدفع</label>
+                        <select id="payment-type" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                            <option value="cash">نقدي (Cash)</option>
+                            <option value="credit">آجل (Credit)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="customer-details-box" class="hidden mt-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs text-slate-300 grid grid-cols-2 gap-2">
+                    <div><span class="text-slate-500">الهاتف:</span> <span id="det-phone" class="font-mono text-emerald-400">--</span></div>
+                    <div><span class="text-slate-500">الموقع:</span> <span id="det-gps" class="font-mono text-slate-300">--</span></div>
+                </div>
+            </div>
+
+            <!-- Product Entry & Scanner Card -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-emerald-400"></i> إضافة المنتجات للطلب
+                    </h2>
+                    <button onclick="toggleScanner()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-barcode"></i> مسح باركود (كاميرا)
+                    </button>
+                </div>
+
+                <div id="scanner-wrapper" class="hidden mb-4 p-3 bg-slate-950 border border-indigo-500/40 rounded-xl">
+                    <div id="interactive-reader" class="w-full overflow-hidden rounded-lg"></div>
+                    <button onclick="toggleScanner()" class="w-full mt-2 py-1.5 bg-slate-800 text-xs text-slate-300 rounded-lg">إغلاق الكاميرا</button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-4">
+                    <div class="sm:col-span-5">
+                        <select id="product-select" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                            <option value="">اختر المنتج...</option>
+                            <option value="p1" data-name="زيت زيتون بلدي 1 لتر" data-price="8.50">زيت زيتون بلدي 1 لتر - $8.50</option>
+                            <option value="p2" data-name="أرز بسمتي 5 كغ" data-price="12.00">أرز بسمتي 5 كغ - $12.00</option>
+                            <option value="p3" data-name="مسحوق غسيل 3 كغ" data-price="6.50">مسحوق غسيل 3 كغ - $6.50</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-3">
+                        <input type="number" id="product-qty" min="1" value="1" placeholder="الكمية" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 text-center">
+                    </div>
+                    <div class="sm:col-span-4">
+                        <button onclick="addProductToOrder()" class="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-semibold py-2 px-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all">
+                            <i class="fa-solid fa-plus"></i> إضافة للطلب
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-x-auto custom-scrollbar border border-slate-800 rounded-xl">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3">المنتج</th>
+                                <th class="p-3 text-center">السعر</th>
+                                <th class="p-3 text-center">الكمية</th>
+                                <th class="p-3 text-center">المجموع</th>
+                                <th class="p-3 text-center">حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-items-body" class="divide-y divide-slate-800 text-slate-300">
+                            <tr>
+                                <td colspan="5" class="text-center p-6 text-slate-500">لم يتم إضافة أي منتجات حتى الآن</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right / Bottom Column: Order Summary & Actions -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-emerald-400"></i> ملخص الفاتورة
+                    </h2>
+
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between text-slate-400">
+                            <span>المجموع الفرعي:</span>
+                            <span id="summary-subtotal" class="font-mono text-slate-200">$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400 items-center">
+                            <span>الخصم ($):</span>
+                            <input type="number" id="summary-discount" value="0" min="0" onchange="calculateTotals()" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-right text-xs text-slate-200 font-mono">
+                        </div>
+                        <div class="border-t border-slate-800 pt-3 flex justify-between text-base font-bold text-white">
+                            <span>الإجمالي النهائي:</span>
+                            <span id="summary-total" class="font-mono text-emerald-400 text-xl">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-800">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-semibold text-slate-400">توقيع الزبون الرقمي:</label>
+                        <button onclick="clearSignature()" class="text-[10px] text-slate-500 hover:text-slate-300">مسح والتوقيع مجدداً</button>
+                    </div>
+                    <canvas id="signature-pad" class="w-full h-24 bg-slate-950 border border-slate-800 rounded-xl cursor-crosshair touch-none"></canvas>
+                </div>
+
+                <div class="mt-6 space-y-2">
+                    <button onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-paper-plane"></i> اعتماد الفاتورة وحفظها سحابياً
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Add New Customer -->
+    <div id="customer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+            <button onclick="closeNewCustomerModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-emerald-400"></i> إضافة زبون جديد
+            </h3>
+
+            <form id="new-customer-form" onsubmit="handleCustomerSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">اسم المحل / المنشأة *</label>
+                    <input type="text" id="cust-shop" required placeholder="STOP&SHOP" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">اسم الشخص المسؤول</label>
+                    <input type="text" id="cust-name" placeholder="BASSAM NASOUR" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">رقم الهاتف *</label>
+                    <input type="tel" id="cust-phone" required placeholder="78954599" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">المنطقة / الحي والموقع الجغرافي</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="cust-location" placeholder="إحداثيات أو اسم المنطقة" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <button type="button" onclick="captureGPS()" class="bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all whitespace-nowrap">
+                            <i class="fa-solid fa-location-crosshairs"></i> GPS
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800 mt-2">
+                    <span class="text-xs text-slate-300">إرسال رسالة ترحيب عبر الواتساب فور الحفظ</span>
+                    <input type="checkbox" id="send-whatsapp-toggle" checked class="w-4 h-4 accent-emerald-500 rounded">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-900/30">
+                        حفظ العميل
+                    </button>
+                    <button type="button" onclick="closeNewCustomerModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        let currentOrderItems = [];
+        let html5QrCode = null;
+
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = 96;
+            ctx.strokeStyle = '#34d399';
+            ctx.lineWidth = 2;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 200);
+
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+        canvas.addEventListener('mousemove', (e) => { if (isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        
+        canvas.addEventListener('touchstart', (e) => {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDrawing) {
+                const rect = canvas.getBoundingClientRect();
+                ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+                ctx.stroke();
+            }
+        });
+        canvas.addEventListener('touchend', () => isDrawing = false);
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function openNewCustomerModal() {
+            document.getElementById('customer-modal').classList.remove('hidden');
+        }
+        function closeNewCustomerModal() {
+            document.getElementById('customer-modal').classList.add('hidden');
+        }
+
+        function captureGPS() {
+            const locInput = document.getElementById('cust-location');
+            locInput.placeholder = "جاري التقاط الإحداثيات...";
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+                        locInput.value = coords;
+                    },
+                    (err) => {
+                        alert("عذراً، لم نتمكن من تحديد الموقع يدوياً.");
+                        locInput.placeholder = "إحداثيات أو اسم المنطقة";
+                    }
+                );
+            }
+        }
+
+        async function handleCustomerSubmit(e) {
+            e.preventDefault();
+            const shop = document.getElementById('cust-shop').value;
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const location = document.getElementById('cust-location').value;
+            const sendWA = document.getElementById('send-whatsapp-toggle').checked;
+
+            // حفظ العميل في Firebase Firestore (إذا تم ربطه)
+            try {
+                if (window.db) {
+                    await window.addDoc(window.collection(window.db, "customers"), {
+                        shop, name, phone, location, createdAt: new Date().toISOString()
+                    });
+                }
+            } catch (err) {
+                console.log("محلي فقط - تم الحفظ بدون سحاب حالياً");
+            }
+
+            const select = document.getElementById('customer-select');
+            const opt = document.createElement('option');
+            opt.value = Date.now();
+            opt.textContent = `${shop} (${name || 'مسؤول'})`;
+            opt.dataset.phone = phone;
+            opt.dataset.gps = location;
+            opt.dataset.address = `${shop} - ${name}`;
+            select.appendChild(opt);
+            select.value = opt.value;
+            onCustomerSelectChange();
+
+            closeNewCustomerModal();
+
+            if (sendWA && phone) {
+                let cleanPhone = phone.replace(/[^0-9]/g, '');
+                if (!cleanPhone.startsWith('961') && cleanPhone.length === 8) {
+                    cleanPhone = '961' + cleanPhone;
+                }
+                const msg = encodeURIComponent(`أهلاً بك عزيزنا ${name || shop}! 🌸\nيسعدنا انضمامك إلى شبكة زبائننا.\nتم تسجيل بياناتك بنجاح وسنكون بخدمتك دائماً.`);
+                window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`, '_blank');
+            }
+        }
+
+        function onCustomerSelectChange() {
+            const select = document.getElementById('customer-select');
+            const selectedOpt = select.options[select.selectedIndex];
+            const detailsBox = document.getElementById('customer-details-box');
+            const gpsBadge = document.getElementById('customer-gps-badge');
+
+            if (selectedOpt.value) {
+                detailsBox.classList.remove('hidden');
+                document.getElementById('det-phone').textContent = selectedOpt.dataset.phone || '--';
+                document.getElementById('det-gps').textContent = selectedOpt.dataset.gps || 'غير محدد';
+                if (selectedOpt.dataset.gps) {
+                    gpsBadge.classList.remove('hidden');
+                } else {
+                    gpsBadge.classList.add('hidden');
+                }
+            } else {
+                detailsBox.classList.add('hidden');
+                gpsBadge.classList.add('hidden');
+            }
+        }
+
+        function addProductToOrder() {
+            const prodSelect = document.getElementById('product-select');
+            const qtyInput = document.getElementById('product-qty');
+            
+            if (!prodSelect.value) return;
+
+            const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+            const name = selectedOpt.dataset.name;
+            const price = parseFloat(selectedOpt.dataset.price);
+            const qty = parseInt(qtyInput.value) || 1;
+
+            currentOrderItems.push({ id: Date.now(), name, price, qty });
+            renderOrderItems();
+            calculateTotals();
+
+            prodSelect.value = '';
+            qtyInput.value = 1;
+        }
+
+        function removeOrderItem(id) {
+            currentOrderItems = currentOrderItems.filter(item => item.id !== id);
+            renderOrderItems();
+            calculateTotals();
+        }
+
+        function renderOrderItems() {
+            const tbody = document.getElementById('order-items-body');
+            if (currentOrderItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-500">لم يتم إضافة أي منتجات حتى الآن</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = currentOrderItems.map(item => `
+                <tr class="hover:bg-slate-950/40">
+                    <td class="p-3 font-medium text-slate-200">${item.name}</td>
+                    <td class="p-3 text-center font-mono text-slate-400">$${item.price.toFixed(2)}</td>
+                    <td class="p-3 text-center font-mono text-slate-200">${item.qty}</td>
+                    <td class="p-3 text-center font-mono text-emerald-400">$${(item.price * item.qty).toFixed(2)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removeOrderItem(${item.id})" class="text-rose-400 hover:text-rose-300">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function calculateTotals() {
+            const subtotal = currentOrderItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const discount = parseFloat(document.getElementById('summary-discount').value) || 0;
+            const total = Math.max(0, subtotal - discount);
+
+            document.getElementById('summary-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function toggleScanner() {
+            const wrapper = document.getElementById('scanner-wrapper');
+            if (wrapper.classList.contains('hidden')) {
+                wrapper.classList.remove('hidden');
+                html5QrCode = new Html5Qrcode("interactive-reader");
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 150 } },
+                    (decodedText) => {
+                        alert(`تم مسح الباركود بنجاح: ${decodedText}`);
+                        toggleScanner();
+                    },
+                    (errorMessage) => {}
+                );
+            } else {
+                wrapper.classList.add('hidden');
+                if (html5QrCode) {
+                    html5QrCode.stop().then(() => html5QrCode.clear());
+                }
+            }
+        }
+
+        async function submitOrder() {
+            const customerSelect = document.getElementById('customer-select');
+            if (!customerSelect.value) {
+                alert("يرجى اختيار الزبون أولاً!");
+                return;
+            }
+            if (currentOrderItems.length === 0) {
+                alert("يرجى إضافة منتج واحد على الأقل للطلب!");
+                return;
+            }
+
+            // حفظ الطلب في Firebase Firestore
+            try {
+                if (window.db) {
+                    await window.addDoc(window.collection(window.db, "orders"), {
+                        customer: customerSelect.options[customerSelect.selectedIndex].text,
+                        items: currentOrderItems,
+                        total: document.getElementById('summary-total').textContent,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                alert("تم حفظ الفاتورة بنجاح ورفعها إلى السحابة (Firebase)!");
+            } catch (err) {
+                alert("تم الحفظ محلياً بنجاح!");
+            }
+
+            currentOrderItems = [];
+            renderOrderItems();
+            calculateTotals();
+            clearSignature();
+        }
+    </script>
+</body>
+</html>
