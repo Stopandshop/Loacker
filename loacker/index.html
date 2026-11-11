@@ -14,6 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- html2canvas للتقاط العناصر العربية كصور في الـ PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="apple-touch-icon" href="رابط_صورة_أيقونة_التطبيق.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="المندوب الميداني">
 
     <!-- تهيئة وإيراد مكتبات Firebase -->
     <script type="module">
@@ -290,7 +294,8 @@
     </main>
 
     <!-- Modal: Add New Product (مع حقل الباركود الجديد) -->
-    <div id="product-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+   <!-- Modal: Add New Product -->
+<div id="product-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
             <button type="button" onclick="closeNewProductModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
@@ -478,7 +483,8 @@
     </div>
 
     <!-- Modal: Invoice Details View -->
-    <div id="invoice-detail-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- Modal: Invoice Details View -->
+    <div id="invoice-detail-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-[120] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
             <button type="button" onclick="closeInvoiceDetailModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
@@ -533,7 +539,8 @@
     </div>
 
     <!-- Modal: Admin Products Management Panel (تراويس الجدول المحدثة بالباركود) -->
-    <div id="admin-panel-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- Modal: Admin Products Management Panel -->
+<div id="admin-panel-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-6xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
             <button type="button" onclick="closeAdminPanelModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             <div class="flex justify-between items-center mb-4">
@@ -575,6 +582,20 @@
             <div class="flex gap-2">
                 <button type="button" onclick="verifyAdminPassword()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl text-xs">دخول</button>
                 <button type="button" onclick="closeAdminAuthModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Password Authentication for Discount Unlock -->
+    <div id="discount-auth-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative text-center">
+            <button type="button" onclick="closeDiscountAuthModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-3 text-xl border border-indigo-500/30"><i class="fa-solid fa-lock"></i></div>
+            <h3 class="text-base font-bold text-white mb-1">صلاحية تعديل الخصم</h3>
+            <p class="text-xs text-slate-400 mb-4">أدخل كلمة مرور الإدارة لفك قفل حقل الخصم</p>
+            <input type="password" id="discount-password-input" placeholder="كلمة المرور..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-center text-slate-200 font-mono mb-4 focus:outline-none focus:border-indigo-500">
+            <div class="flex gap-2">
+                <button type="button" onclick="verifyDiscountPassword()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl text-xs">فك القفل</button>
+                <button type="button" onclick="closeDiscountAuthModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs">إلغاء</button>
             </div>
         </div>
     </div>
@@ -811,7 +832,7 @@
             try {
                 if (window.db && window.collection && window.getDocs) {
                     const querySnapshot = await window.getDocs(window.collection(window.db, "orders"));
-                    let discountRows = '';
+                    let discountOrders = [];
                     let count = 0;
 
                     querySnapshot.forEach((docSnap) => {
@@ -819,25 +840,42 @@
                         const discountVal = parseFloat(data.discount) || 0;
 
                         if (discountVal > 0) {
-                            count++;
-                            const dateFormatted = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-LB') : 'غير متوفر';
-                            const subtotalVal = (parseFloat((data.total || "").replace('$', '')) || 0) + discountVal;
-
-                            discountRows += `
-                                <tr class="hover:bg-slate-950/50">
-                                    <td class="p-3 font-mono text-slate-300">${dateFormatted}</td>
-                                    <td class="p-3 font-bold text-white">${data.customer || 'زبون عام'}</td>
-                                    <td class="p-3 text-center font-mono text-slate-400">$${subtotalVal.toFixed(2)}</td>
-                                    <td class="p-3 text-center font-mono text-rose-400 font-bold">-$${discountVal.toFixed(2)}</td>
-                                    <td class="p-3 text-center font-mono text-emerald-400 font-bold">${data.total}</td>
-                                    <td class="p-3 text-center">
-                                        <button type="button" onclick='viewInvoiceDetails(${JSON.stringify(data)})' class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 px-3 py-1 rounded-lg text-xs font-semibold">
-                                            <i class="fa-solid fa-eye"></i> استطلاع الفاتورة
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
+                            discountOrders.push({ id: docSnap.id, ...data });
                         }
+                    });
+
+                    // ترتيب الفواتير من الأحدث إلى الأقدم (الجديد في الأول)
+                    discountOrders.sort((a, b) => {
+                        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                        return dateB - dateA;
+                    });
+
+                    let discountRows = '';
+
+                    discountOrders.forEach((data) => {
+                        count++;
+                        const discountVal = parseFloat(data.discount) || 0;
+                        const dateFormatted = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-LB') : 'غير متوفر';
+                        const subtotalVal = (parseFloat((data.total || "").replace('$', '')) || 0) + discountVal;
+
+                        // حفظ بيانات الفاتورة بشكل آمن كمتغير مؤقت لتجنب مشاكل علامات التنصيص
+                        const encodedData = encodeURIComponent(JSON.stringify(data));
+
+                        discountRows += `
+                            <tr class="hover:bg-slate-950/50">
+                                <td class="p-3 font-mono text-slate-300">${dateFormatted}</td>
+                                <td class="p-3 font-bold text-white">${data.customer || 'زبون عام'}</td>
+                                <td class="p-3 text-center font-mono text-slate-400">$${subtotalVal.toFixed(2)}</td>
+                                <td class="p-3 text-center font-mono text-rose-400 font-bold">-$${discountVal.toFixed(2)}</td>
+                                <td class="p-3 text-center font-mono text-emerald-400 font-bold">${data.total}</td>
+                                <td class="p-3 text-center">
+                                    <button type="button" onclick='viewInvoiceDetails(JSON.parse(decodeURIComponent("${encodedData}")))' class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 px-3 py-1 rounded-lg text-xs font-semibold">
+                                        <i class="fa-solid fa-eye"></i> استطلاع الفاتورة
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
                     });
 
                     if (count === 0) {
@@ -1076,56 +1114,76 @@
             try {
                 if (window.db && window.collection && window.getDocs) {
                     const querySnapshot = await window.getDocs(window.collection(window.db, "orders"));
+                    let customerOrders = [];
                     let totalPurchases = 0;
                     let totalDebt = 0;
-                    let ordersHtml = '';
 
                     querySnapshot.forEach((docSnap) => {
                         const data = docSnap.data();
                         const orderId = docSnap.id;
 
                         if (data.customer && (data.customer.includes(cust.shop) || cust.shop.includes(data.customer))) {
-                            const orderTotal = parseFloat(data.total.replace('$', '')) || 0;
-                            totalPurchases += orderTotal;
-
-                            const isCredit = (data.paymentType === 'credit' && !data.isPaid);
-                            if (isCredit) totalDebt += orderTotal;
-
-                            const dateFormatted = data.createdAt ? new Date(data.createdAt).toLocaleDateString('ar-LB') : 'غير متوفر';
-
-                            const rowBgClass = isCredit 
-                                ? 'bg-rose-950/60 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)] animate-pulse' 
-                                : 'hover:bg-slate-950/40';
-
-                            const statusLabel = isCredit 
-                                ? '<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> آجل (غير مدفوع)</span>' 
-                                : '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> مدفوع</span>';
-
-                            const actionButton = isCredit
-                                ? `<button type="button" onclick="payCreditOrder('${orderId}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-md">
-                                     <i class="fa-solid fa-check"></i> تسديد
-                                   </button>`
-                                : `<span class="text-slate-500 text-xs">مكتمل</span>`;
-
-                            const returnButton = `<button type="button" onclick='openPartialReturnModal("${orderId}", ${JSON.stringify(data.items || []).replace(/"/g, '&quot;')})' class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all" title="إرجاع جزئي أو كلي لبضاعة الفاتورة">
-                                     <i class="fa-solid fa-rotate-left"></i> إرجاع
-                                   </button>`;
-
-                            ordersHtml += `
-                                <tr class="${rowBgClass} transition-all duration-300">
-                                    <td class="p-3 font-mono text-slate-300">${dateFormatted}</td>
-                                    <td class="p-3 text-center">${statusLabel}</td>
-                                    <td class="p-3 text-center font-mono text-emerald-400 font-bold">${data.total}</td>
-                                    <td class="p-3 text-center flex items-center justify-center gap-2 flex-wrap">
-                                        <button type="button" onclick='viewInvoiceDetails(${JSON.stringify(data)})' class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 px-2.5 py-1 rounded-lg text-xs font-semibold">
-                                            <i class="fa-solid fa-eye"></i> استطلاع
-                                        </button>
-                                        ${actionButton}
-                                        ${returnButton}
-                                    </td>
-                                </tr>
-                            `;
+                            customerOrders.push({ id: orderId, ...data });
                         }
+                    });
+
+                    // ترتيب الفواتير حسب التاريخ (من الأحدث إلى الأقدم)
+                    customerOrders.sort((a, b) => {
+                        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                        return dateB - dateA;
+                    });
+
+                    let ordersHtml = '';
+
+                    customerOrders.forEach((data) => {
+                        const orderId = data.id;
+                        const orderTotal = parseFloat(data.total.replace('$', '')) || 0;
+                        totalPurchases += orderTotal;
+
+                        const isCredit = (data.paymentType === 'credit' && !data.isPaid);
+                        if (isCredit) totalDebt += orderTotal;
+
+                        const dateFormatted = data.createdAt ? new Date(data.createdAt).toLocaleDateString('ar-LB') : 'غير متوفر';
+
+                        const rowBgClass = isCredit 
+                            ? 'bg-rose-950/60 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)] animate-pulse' 
+                            : 'hover:bg-slate-950/40';
+
+                        const statusLabel = isCredit 
+                            ? '<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> آجل (غير مدفوع)</span>' 
+                            : '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> مدفوع</span>';
+
+                        const actionButton = isCredit
+                            ? `<button type="button" onclick="payCreditOrder('${orderId}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-md">
+                                 <i class="fa-solid fa-check"></i> تسديد
+                               </button>`
+                            : `<span class="text-slate-500 text-xs">مكتمل</span>`;
+
+                        const returnButton = `<button type="button" onclick='openPartialReturnModal("${orderId}", ${JSON.stringify(data.items || []).replace(/"/g, '&quot;')})' class="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all" title="إرجاع جزئي أو كلي لبضاعة الفاتورة">
+                                 <i class="fa-solid fa-rotate-left"></i> إرجاع
+                               </button>`;
+
+                        // زر الحذف الجديد
+                        const deleteButton = `<button type="button" onclick="deleteCustomerOrder('${orderId}')" class="bg-rose-700/20 hover:bg-rose-700/30 text-rose-400 border border-rose-600/40 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all" title="حذف الفاتورة نهائياً">
+                                 <i class="fa-solid fa-trash-can"></i> حذف
+                               </button>`;
+
+                        ordersHtml += `
+                            <tr class="${rowBgClass} transition-all duration-300">
+                                <td class="p-3 font-mono text-slate-300">${dateFormatted}</td>
+                                <td class="p-3 text-center">${statusLabel}</td>
+                                <td class="p-3 text-center font-mono text-emerald-400 font-bold">${data.total}</td>
+                                <td class="p-3 text-center flex items-center justify-center gap-1.5 flex-wrap">
+                                    <button type="button" onclick='viewInvoiceDetails(${JSON.stringify(data)})' class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600/30 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                                        <i class="fa-solid fa-eye"></i> استطلاع
+                                    </button>
+                                    ${actionButton}
+                                    ${returnButton}
+                                    ${deleteButton}
+                                </td>
+                            </tr>
+                        `;
                     });
 
                     if (ordersHtml === '') {
@@ -1139,7 +1197,6 @@
                 }
             } catch (error) { console.error(error); }
         }
-
         function openPartialReturnModal(orderId, orderItems) {
             activeReturnOrderId = orderId;
             activeReturnOrderItems = orderItems || [];
@@ -2025,6 +2082,44 @@
             document.body.appendChild(anchor);
             anchor.click();
             document.body.removeChild(anchor);
+        }
+        async function deleteCustomerOrder(orderId) {
+            if (!confirm("هل أنت متأكد من حذف هذه الفاتورة نهائياً؟ سيتم إعادة الكميات المباعة إلى المخزون وتعديل حساب الزبون.")) return;
+
+            try {
+                const orderRef = window.doc(window.db, "orders", orderId);
+                const orderSnap = await window.getDoc(orderRef);
+
+                if (orderSnap.exists()) {
+                    const orderData = orderSnap.data();
+                    const items = orderData.items || [];
+
+                    // إعادة الكميات إلى المخزون
+                    for (const item of items) {
+                        const prodRef = window.doc(window.db, "products", item.prodId);
+                        const prodSnap = await window.getDoc(prodRef);
+
+                        if (prodSnap.exists()) {
+                            const currentData = prodSnap.data();
+                            const boxCap = currentData.boxCapacity || 12;
+                            const unitsToReturn = (item.unitType === 'box') ? (item.qty * boxCap) : item.qty;
+                            const newStockQty = (currentData.stockQty || 0) + unitsToReturn;
+
+                            await window.updateDoc(prodRef, { stockQty: newStockQty });
+                        }
+                    }
+
+                    // حذف مستند الفاتورة من قاعدة البيانات
+                    await window.deleteDoc(orderRef);
+
+                    alert("تم حذف الفاتورة وإعادة الكميات للمخزون بنجاح!");
+                    loadProductsFromCloud();
+                    openCustomerStatementModal(); // تحديث النافذة تلقائياً
+                }
+            } catch (error) {
+                console.error("خطأ أثناء حذف الفاتورة:", error);
+                alert("حدث خطأ أثناء محاولة الحذف.");
+            }
         }
     </script>
 </body>
