@@ -599,6 +599,142 @@
             </div>
         </div>
     </div>
+    <!-- Modal: Password Authentication for Profit Report -->
+    <div id="profit-auth-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative text-center">
+            <button type="button" onclick="closeProfitAuthModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="w-12 h-12 bg-emerald-600/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 text-xl border border-emerald-500/30"><i class="fa-solid fa-lock"></i></div>
+            <h3 class="text-base font-bold text-white mb-1">صلاحية تقرير الأرباح</h3>
+            <p class="text-xs text-slate-400 mb-4">أدخل كلمة مرور الإدارة لعرض تقرير الأرباح والمبيعات</p>
+            <input type="password" id="profit-password-input" placeholder="كلمة المرور..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-center text-slate-200 font-mono mb-4 focus:outline-none focus:border-emerald-500">
+            <div class="flex gap-2">
+                <button type="button" onclick="verifyProfitPassword()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs">عرض الأرباح</button>
+                <button type="button" onclick="closeProfitAuthModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Profit Report Display Panel (محدث وشامل) -->
+    <div id="profit-report-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-[120] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+            <button type="button" onclick="closeProfitReportModal()" class="absolute top-4 left-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-emerald-400"></i> لوحة تحليل الأرباح والمبيعات المتقدمة
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">تحليل شامل للمبيعات والأرباح (يومي، شهري، سنوي، نسب الأرباح، المنتجات والزبائن)</p>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+                
+                <!-- الملخص العام -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                        <span class="text-slate-400 text-xs block mb-1">إجمالي المبيعات العامة</span>
+                        <span id="prof-total-sales" class="font-mono text-indigo-400 font-bold text-lg">$0.00</span>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                        <span class="text-slate-400 text-xs block mb-1">صافي الأرباح الإجمالية</span>
+                        <span id="prof-net-profit" class="font-mono text-emerald-400 font-bold text-lg">$0.00</span>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                        <span class="text-slate-400 text-xs block mb-1">نسبة الربح الإجمالية (%)</span>
+                        <span id="prof-profit-margin" class="font-mono text-amber-400 font-bold text-lg">0%</span>
+                    </div>
+                </div>
+
+                <!-- أرقام القيادة: الأكثر مبيعا والأكثر سحبا -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-indigo-950/30 border border-indigo-500/30 p-3.5 rounded-xl flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0 text-lg"><i class="fa-solid fa-fire"></i></div>
+                        <div>
+                            <span class="text-indigo-300 text-xs block">المنتج الأكثر مبيعاً:</span>
+                            <span id="prof-top-product" class="text-white font-bold text-sm">--</span>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-950/30 border border-emerald-500/30 p-3.5 rounded-xl flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-600/20 text-emerald-400 flex items-center justify-center shrink-0 text-lg"><i class="fa-solid fa-crown"></i></div>
+                        <div>
+                            <span class="text-emerald-300 text-xs block">الزبون الأكثر سحباً وشراءً:</span>
+                            <span id="prof-top-customer" class="text-white font-bold text-sm">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التحليل الزمني (يومي، شهري، سنوي) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                        <h4 class="text-xs font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 flex items-center gap-1"><i class="fa-solid fa-calendar-day text-indigo-400"></i> الأرباح حسب الأيام</h4>
+                        <div id="prof-daily-list" class="space-y-1.5 text-xs max-h-36 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                        <h4 class="text-xs font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 flex items-center gap-1"><i class="fa-solid fa-calendar-alt text-emerald-400"></i> الأرباح حسب الشهور</h4>
+                        <div id="prof-monthly-list" class="space-y-1.5 text-xs max-h-36 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                        <h4 class="text-xs font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 flex items-center gap-1"><i class="fa-solid fa-calendar text-amber-400"></i> الأرباح حسب السنوات</h4>
+                        <div id="prof-yearly-list" class="space-y-1.5 text-xs max-h-36 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                </div>
+
+                <!-- أرباح ونتائج الزبائن -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                    <h4 class="text-xs font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 flex items-center gap-1"><i class="fa-solid fa-users text-indigo-400"></i> تفاصيل المبيعات ونسب الأرباح لكل زبون</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800">
+                                    <th class="p-2">اسم الزبون</th>
+                                    <th class="p-2 text-center">إجمالي المشتريات</th>
+                                    <th class="p-2 text-center">صافي الربح من الزبون</th>
+                                    <th class="p-2 text-center">نسبة الربح (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prof-customers-tbody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- أرباح ونتائج المنتجات -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                    <h4 class="text-xs font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-emerald-400"></i> تفاصيل المبيعات ونسب الأرباح لكل منتج</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800">
+                                    <th class="p-2">اسم المنتج</th>
+                                    <th class="p-2 text-center">الكمية المباعة</th>
+                                    <th class="p-2 text-center">إجمالي الإيراد</th>
+                                    <th class="p-2 text-center">صافي الربح</th>
+                                    <th class="p-2 text-center">نسبة الربح (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prof-products-tbody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- أزرار الطباعة وواتساب والإغلاق -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800 mt-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="printProfitReport('daily')" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-print"></i> طباعة اليومي
+                    </button>
+                    <button type="button" onclick="printProfitReport('monthly')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-print"></i> طباعة الشهري
+                    </button>
+                    <button type="button" onclick="printProfitReport('yearly')" class="bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-print"></i> طباعة السنوي
+                    </button>
+                    <button type="button" onclick="sendProfitReportWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all">
+                        <i class="fa-brands fa-whatsapp text-sm"></i> إرسال واتساب
+                    </button>
+                </div>
+
+                <button type="button" onclick="closeProfitReportModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-5 py-2 rounded-xl text-xs">إغلاق</button>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript Application Logic -->
     <script>
@@ -912,7 +1048,199 @@
                 alert("كلمة المرور غير صحيحة!");
             }
         }
+        
+        // متغير عام لحفظ بيانات الأرباح لاستخدامها في الطباعة وواتساب
+        let latestProfitSummary = {
+            totalSales: 0,
+            netProfit: 0,
+            margin: 0,
+            topProduct: "",
+            topCustomer: "",
+            daily: {},
+            monthly: {},
+            yearly: {}
+        };
 
+        async function openProfitReportModal() {
+            document.getElementById('profit-report-modal').classList.remove('hidden');
+
+            let totalSales = 0;
+            let totalCost = 0;
+
+            let dailyMap = {};
+            let monthlyMap = {};
+            let yearlyMap = {};
+
+            let customerMap = {};
+            let productSalesMap = {};
+
+            try {
+                if (window.db && window.collection && window.getDocs) {
+                    const querySnapshot = await window.getDocs(window.collection(window.db, "orders"));
+
+                    querySnapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        const orderTotal = parseFloat((data.total || "").replace('$', '')) || 0;
+                        const customerName = data.customer || 'زبون عام';
+                        const createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
+
+                        // التقويم الزمني
+                        const dayKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+                        const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+                        const yearKey = `${createdAt.getFullYear()}`; // YYYY
+
+                        let orderCost = 0;
+
+                        if (data.items && Array.isArray(data.items)) {
+                            data.items.forEach(item => {
+                                const itemCost = (item.costPrice || 0) * item.qty;
+                                const itemRevenue = (item.price || 0) * item.qty;
+                                orderCost += itemCost;
+
+                                // تجميع بيانات المنتجات
+                                if (!productSalesMap[item.name]) {
+                                    productSalesMap[item.name] = { qty: 0, revenue: 0, cost: 0 };
+                                }
+                                productSalesMap[item.name].qty += item.qty;
+                                productSalesMap[item.name].revenue += itemRevenue;
+                                productSalesMap[item.name].cost += itemCost;
+                            });
+                        }
+
+                        const orderProfit = orderTotal - orderCost;
+                        totalSales += orderTotal;
+                        totalCost += orderCost;
+
+                        // تجميع الأيام
+                        if (!dailyMap[dayKey]) dailyMap[dayKey] = { sales: 0, profit: 0 };
+                        dailyMap[dayKey].sales += orderTotal;
+                        dailyMap[dayKey].profit += orderProfit;
+
+                        // تجميع الشهور
+                        if (!monthlyMap[monthKey]) monthlyMap[monthKey] = { sales: 0, profit: 0 };
+                        monthlyMap[monthKey].sales += orderTotal;
+                        monthlyMap[monthKey].profit += orderProfit;
+
+                        // تجميع السنوات
+                        if (!yearlyMap[yearKey]) yearlyMap[yearKey] = { sales: 0, profit: 0 };
+                        yearlyMap[yearKey].sales += orderTotal;
+                        yearlyMap[yearKey].profit += orderProfit;
+
+                        // تجميع الزبائن
+                        if (!customerMap[customerName]) customerMap[customerName] = { sales: 0, profit: 0 };
+                        customerMap[customerName].sales += orderTotal;
+                        customerMap[customerName].profit += orderProfit;
+                    });
+                }
+            } catch (error) {
+                console.error("خطأ في جلب تقرير الأرباح:", error);
+            }
+
+            const netProfit = totalSales - totalCost;
+            const overallMargin = totalSales > 0 ? ((netProfit / totalSales) * 100).toFixed(1) : 0;
+
+            document.getElementById('prof-total-sales').textContent = `$${totalSales.toFixed(2)}`;
+            document.getElementById('prof-net-profit').textContent = `$${netProfit.toFixed(2)}`;
+            document.getElementById('prof-profit-margin').textContent = `${overallMargin}%`;
+
+            // تحديد الزبون الأكثر سحباً
+            let topCustomer = "لا يوجد";
+            let maxCustSales = -1;
+            for (let cust in customerMap) {
+                if (customerMap[cust].sales > maxCustSales) {
+                    maxCustSales = customerMap[cust].sales;
+                    topCustomer = `${cust} ($${maxCustSales.toFixed(2)})`;
+                }
+            }
+            document.getElementById('prof-top-customer').textContent = topCustomer;
+
+            // تحديد المنتج الأكثر مبيعاً
+            let topProduct = "لا يوجد";
+            let maxProdQty = -1;
+            for (let prod in productSalesMap) {
+                if (productSalesMap[prod].qty > maxProdQty) {
+                    maxProdQty = productSalesMap[prod].qty;
+                    topProduct = `${prod} (${maxProdQty} قطعة)`;
+                }
+            }
+            document.getElementById('prof-top-product').textContent = topProduct;
+
+            // تعبئة الأيام
+            const dailyList = document.getElementById('prof-daily-list');
+            dailyList.innerHTML = Object.keys(dailyMap).sort().reverse().map(d => `
+                <div class="flex justify-between items-center bg-slate-900 p-2 rounded">
+                    <span class="text-slate-300 font-mono">${d}</span>
+                    <span class="text-emerald-400 font-mono font-bold">ربح: $${dailyMap[d].profit.toFixed(2)}</span>
+                </div>
+            `).join('') || '<span class="text-slate-500">لا توجد بيانات</span>';
+
+            // تعبئة الشهور
+            const monthlyList = document.getElementById('prof-monthly-list');
+            monthlyList.innerHTML = Object.keys(monthlyMap).sort().reverse().map(m => `
+                <div class="flex justify-between items-center bg-slate-900 p-2 rounded">
+                    <span class="text-slate-300 font-mono">${m}</span>
+                    <span class="text-emerald-400 font-mono font-bold">ربح: $${monthlyMap[m].profit.toFixed(2)}</span>
+                </div>
+            `).join('') || '<span class="text-slate-500">لا توجد بيانات</span>';
+
+            // تعبئة السنوات
+            const yearlyList = document.getElementById('prof-yearly-list');
+            yearlyList.innerHTML = Object.keys(yearlyMap).sort().reverse().map(y => `
+                <div class="flex justify-between items-center bg-slate-900 p-2 rounded">
+                    <span class="text-slate-300 font-mono">${y}</span>
+                    <span class="text-emerald-400 font-mono font-bold">ربح: $${yearlyMap[y].profit.toFixed(2)}</span>
+                </div>
+            `).join('') || '<span class="text-slate-500">لا توجد بيانات</span>';
+
+            // تعبئة جدول الزبائن
+            const custTbody = document.getElementById('prof-customers-tbody');
+            custTbody.innerHTML = Object.keys(customerMap).map(c => {
+                const cSales = customerMap[c].sales;
+                const cProfit = customerMap[c].profit;
+                const cMargin = cSales > 0 ? ((cProfit / cSales) * 100).toFixed(1) : 0;
+                return `
+                    <tr>
+                        <td class="p-2 font-bold text-white">${c}</td>
+                        <td class="p-2 text-center font-mono text-indigo-300">$${cSales.toFixed(2)}</td>
+                        <td class="p-2 text-center font-mono text-emerald-400 font-bold">$${cProfit.toFixed(2)}</td>
+                        <td class="p-2 text-center font-mono text-amber-400">${cMargin}%</td>
+                    </tr>
+                `;
+            }).join('') || `<tr><td colspan="4" class="text-center p-4 text-slate-500">لا توجد بيانات زبائن</td></tr>`;
+
+            // تعبئة جدول المنتجات
+            const prodTbody = document.getElementById('prof-products-tbody');
+            prodTbody.innerHTML = Object.keys(productSalesMap).map(p => {
+                const pData = productSalesMap[p];
+                const pProfit = pData.revenue - pData.cost;
+                const pMargin = pData.revenue > 0 ? ((pProfit / pData.revenue) * 100).toFixed(1) : 0;
+                return `
+                    <tr>
+                        <td class="p-2 font-bold text-white">${p}</td>
+                        <td class="p-2 text-center font-mono text-indigo-300">${pData.qty}</td>
+                        <td class="p-2 text-center font-mono text-slate-300">$${pData.revenue.toFixed(2)}</td>
+                        <td class="p-2 text-center font-mono text-emerald-400 font-bold">$${pProfit.toFixed(2)}</td>
+                        <td class="p-2 text-center font-mono text-amber-400">${pMargin}%</td>
+                    </tr>
+                `;
+            }).join('') || `<tr><td colspan="5" class="text-center p-4 text-slate-500">لا توجد بيانات منتجات</td></tr>`;
+
+            // حفظ البيانات في المتغير العام لاستخدامها في الطباعة والواتساب
+            latestProfitSummary = {
+                totalSales: totalSales,
+                netProfit: netProfit,
+                margin: overallMargin,
+                topProduct: topProduct,
+                topCustomer: topCustomer,
+                daily: dailyMap,
+                monthly: monthlyMap,
+                yearly: yearlyMap
+            };
+        }
+
+        function closeProfitReportModal() {
+            document.getElementById('profit-report-modal').classList.add('hidden');
+        }
         function requestDiscountUnlock() {
             document.getElementById('discount-password-input').value = '';
             document.getElementById('discount-auth-modal').classList.remove('hidden');
@@ -2120,6 +2448,108 @@
                 console.error("خطأ أثناء حذف الفاتورة:", error);
                 alert("حدث خطأ أثناء محاولة الحذف.");
             }
+        }
+        // دالة طباعة التقرير (يومي، شهري، سنوي) على الطابعة الحرارية أو العادية
+        function printProfitReport(periodType) {
+            const printArea = document.getElementById('printable-receipt-area');
+            let title = "";
+            let dataMap = {};
+
+            if (periodType === 'daily') {
+                title = "تقرير الأرباح والمبيعات اليومي";
+                dataMap = latestProfitSummary.daily;
+            } else if (periodType === 'monthly') {
+                title = "تقرير الأرباح والمبيعات الشهري";
+                dataMap = latestProfitSummary.monthly;
+            } else if (periodType === 'yearly') {
+                title = "تقرير الأرباح والمبيعات السنوي";
+                dataMap = latestProfitSummary.yearly;
+            }
+
+            const sortedKeys = Object.keys(dataMap).sort().reverse();
+
+            if (sortedKeys.length === 0) {
+                alert("لا توجد بيانات متاحة للطباعة في هذا القسم.");
+                return;
+            }
+
+            let rowsHtml = sortedKeys.map(key => {
+                const item = dataMap[key];
+                const margin = item.sales > 0 ? ((item.profit / item.sales) * 100).toFixed(1) : 0;
+                return `
+                    <tr style="border-bottom: 1px dashed #ccc;">
+                        <td style="padding: 4px; font-weight: bold;">${key}</td>
+                        <td style="padding: 4px; text-align: center;">$${item.sales.toFixed(2)}</td>
+                        <td style="padding: 4px; text-align: center;">$${item.profit.toFixed(2)}</td>
+                        <td style="padding: 4px; text-align: left;">${margin}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            printArea.innerHTML = `
+                <div style="text-align: center; font-family: 'Tajawal', sans-serif; direction: rtl; width: 100%; padding: 10px;">
+                    <h2 style="font-size: 16px; margin-bottom: 4px; font-weight: bold;">${title}</h2>
+                    <p style="font-size: 11px; color: #555; margin: 0;">تاريخ الطباعة: ${new Date().toLocaleString('ar-LB')}</p>
+                    <hr style="border: 0.5px dashed #000; margin: 8px 0;">
+                    <table style="width: 100%; text-align: right; font-size: 11px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #000;">
+                                <th style="padding: 4px;">الفترة</th>
+                                <th style="padding: 4px; text-align: center;">المبيعات</th>
+                                <th style="padding: 4px; text-align: center;">صافي الربح</th>
+                                <th style="padding: 4px; text-align: left;">النسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                    <hr style="border: 0.5px dashed #000; margin: 8px 0;">
+                    <div style="text-align: right; font-size: 11px; margin-top: 6px;">
+                        <p style="margin: 2px 0;"><strong>إجمالي المبيعات العامة:</strong> $${latestProfitSummary.totalSales.toFixed(2)}</p>
+                        <p style="margin: 2px 0;"><strong>صافي الأرباح الكلي:</strong> $${latestProfitSummary.netProfit.toFixed(2)} (${latestProfitSummary.margin}%)</p>
+                    </div>
+                </div>
+            `;
+
+            window.print();
+        }
+
+        // دالة إرسال ملخص تقرير الأرباح والمبيعات عبر واتساب
+        function sendProfitReportWhatsApp() {
+            const adminPhone = prompt("أدخل رقم الهاتف لإرسال التقرير عبر واتساب (مع رمز الدولة، مثال: 96170123456) أو اتركه فارغاً لاختيار جهة الاتصال من واتساب:");
+            if (adminPhone === null) return; // في حال الضغط على إلغاء
+
+            const cleanPhone = adminPhone.replace(/\D/g, '');
+            const todayKey = new Date().toISOString().split('T')[0];
+            const todayData = latestProfitSummary.daily[todayKey] || { sales: 0, profit: 0 };
+
+            let message = `📊 *ملخص تقرير الأرباح والمبيعات*\n`;
+            message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-LB')}\n`;
+            message += `------------------------\n`;
+            message += `💰 *الإجماليات العامة:*\n`;
+            message += `• إجمالي المبيعات: $${latestProfitSummary.totalSales.toFixed(2)}\n`;
+            message += `• صافي الأرباح: $${latestProfitSummary.netProfit.toFixed(2)}\n`;
+            message += `• نسبة الربح: ${latestProfitSummary.margin}%\n`;
+            message += `------------------------\n`;
+            message += `📆 *مبيعات اليوم (${todayKey}):*\n`;
+            message += `• المبيعات: $${todayData.sales.toFixed(2)}\n`;
+            message += `• الربح: $${todayData.profit.toFixed(2)}\n`;
+            message += `------------------------\n`;
+            message += `🔥 *الأكثر مبيعاً:* ${latestProfitSummary.topProduct}\n`;
+            message += `👑 *الزبون الأكثر سحباً:* ${latestProfitSummary.topCustomer}\n`;
+
+            const whatsappUrl = cleanPhone 
+                ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+                : `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+            const anchor = document.createElement('a');
+            anchor.href = whatsappUrl;
+            anchor.target = '_blank';
+            anchor.rel = 'noopener noreferrer';
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
         }
     </script>
 </body>
