@@ -127,6 +127,13 @@
                 }
 
                 const accessRef = doc(db, "settings", "access");
+                const accessSnap = await getDoc(accessRef);
+
+                if (!accessSnap.exists()) {
+                    if (errEl) errEl.textContent = "لم يتم ضبط رمز الدخول (settings/access) في Firestore بعد.";
+                    return;
+                }
+
                 const accessData = accessSnap.data();
                 if (accessData.subscriptionActive === false) {
                     if (errEl) errEl.textContent = "رمز الدخول غير صحيح.";
