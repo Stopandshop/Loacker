@@ -14,7 +14,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- html2canvas للتقاط العناصر العربية كصور في الـ PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="apple-touch-icon" href="رابط_صورة_أيقونة_التطبيق.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="المندوب الميداني">
@@ -1084,7 +1083,23 @@
         let activeReturnOrderId = null;
         let activeReturnOrderItems = [];
 
-        const ADMIN_PASSWORD = "123";
+        let cachedAdminPassword = null;
+
+        async function getAdminPasswordFromCloud() {
+            if (cachedAdminPassword) return cachedAdminPassword;
+            try {
+                if (window.db && window.doc && window.getDoc) {
+                    const adminSnap = await window.getDoc(window.doc(window.db, "settings", "admin"));
+                    if (adminSnap.exists() && adminSnap.data().password) {
+                        cachedAdminPassword = String(adminSnap.data().password);
+                        return cachedAdminPassword;
+                    }
+                }
+            } catch (e) {
+                console.error("تعذر جلب كلمة مرور الإدارة:", e);
+            }
+            return null;
+        }
 
         const canvas = document.getElementById('signature-pad');
         const ctx = canvas.getContext('2d');
@@ -1163,13 +1178,14 @@
             document.getElementById('stockin-auth-modal').classList.add('hidden');
         }
 
-        function verifyStockInPassword() {
+        async function verifyStockInPassword() {
             const pass = document.getElementById('stockin-password-input').value;
-            if (pass === ADMIN_PASSWORD) {
+            const expectedPass = await getAdminPasswordFromCloud();
+            if (expectedPass && pass === expectedPass) {
                 closeStockInAuthModal();
                 openStockInModal();
             } else {
-                alert("كلمة المرور غير صحيحة!");
+                alert("كلمة المرور غير صحيحة أو تعذر التحقق!");
             }
         }
 
@@ -1306,13 +1322,14 @@
             document.getElementById('discount-log-auth-modal').classList.add('hidden');
         }
 
-        function verifyDiscountLogPassword() {
+        async function verifyDiscountLogPassword() {
             const pass = document.getElementById('discount-log-password-input').value;
-            if (pass === ADMIN_PASSWORD) {
+            const expectedPass = await getAdminPasswordFromCloud();
+            if (expectedPass && pass === expectedPass) {
                 closeDiscountLogAuthModal();
                 openDiscountLogModal();
             } else {
-                alert("كلمة المرور غير صحيحة!");
+                alert("كلمة المرور غير صحيحة أو تعذر التحقق!");
             }
         }
 
@@ -1393,13 +1410,14 @@
             document.getElementById('profit-auth-modal').classList.add('hidden');
         }
 
-        function verifyProfitPassword() {
+        async function verifyProfitPassword() {
             const pass = document.getElementById('profit-password-input').value;
-            if (pass === ADMIN_PASSWORD) {
+            const expectedPass = await getAdminPasswordFromCloud();
+            if (expectedPass && pass === expectedPass) {
                 closeProfitAuthModal();
                 openProfitReportModal();
             } else {
-                alert("كلمة المرور غير صحيحة!");
+                alert("كلمة المرور غير صحيحة أو تعذر التحقق!");
             }
         }
         
@@ -1696,9 +1714,10 @@
             document.getElementById('discount-auth-modal').classList.add('hidden');
         }
 
-        function verifyDiscountPassword() {
+        async function verifyDiscountPassword() {
             const pass = document.getElementById('discount-password-input').value;
-            if (pass === ADMIN_PASSWORD) {
+            const expectedPass = await getAdminPasswordFromCloud();
+            if (expectedPass && pass === expectedPass) {
                 closeDiscountAuthModal();
                 const discountInput = document.getElementById('summary-discount');
                 const lockIcon = document.getElementById('discount-lock-icon');
@@ -1712,7 +1731,7 @@
                 
                 alert("تم فك قفل حقل الخصم بنجاح!");
             } else {
-                alert("كلمة المرور غير صحيحة!");
+                alert("كلمة المرور غير صحيحة أو تعذر التحقق!");
             }
         }
 
@@ -1736,13 +1755,14 @@
         function closeAdminAuthModal() {
             document.getElementById('admin-auth-modal').classList.add('hidden');
         }
-        function verifyAdminPassword() {
+        async function verifyAdminPassword() {
             const pass = document.getElementById('admin-password-input').value;
-            if (pass === ADMIN_PASSWORD) {
+            const expectedPass = await getAdminPasswordFromCloud();
+            if (expectedPass && pass === expectedPass) {
                 closeAdminAuthModal();
                 openAdminPanelModal();
             } else {
-                alert("كلمة المرور غير صحيحة!");
+                alert("كلمة المرور غير صحيحة أو تعذر التحقق!");
             }
         }
 
@@ -2441,29 +2461,43 @@
         }
 
         async function loadProductsFromCloud() {
-            if (!window.isAppUnlocked) return;
-            try {
-                if (window.db && window.collection && window.getDocs) {
-                    const querySnapshot = await window.getDocs(window.collection(window.db, "products"));
-                    productsList = [];
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        productsList.push({
-                            id: doc.id,
-                            name: data.name,
-                            barcode: data.barcode || '',
-                            stockQty: data.stockQty !== undefined ? data.stockQty : 0,
-                            image: data.image || '',
-                            costPrice: data.costPrice || 0,
-                            unitPrice: data.unitPrice || data.price || 1.00,
-                            boxCapacity: data.boxCapacity || 12,
-                            boxPrice: data.boxPrice || (data.price ? data.price * 12 : 12.00)
-                        });
-                    });
-                    renderProductsGrid();
-                }
-            } catch (error) { console.error(error); }
+    if (!window.isAppUnlocked) return;
+    const grid = document.getElementById('products-grid');
+    if (grid && productsList.length === 0) {
+        grid.innerHTML = `<div class="text-center p-4 text-slate-400 text-xs">جاري تحميل المنتجات من السحابة...</div>`;
+    }
+
+    try {
+        if (window.db && window.collection && window.getDocs) {
+            const querySnapshot = await window.getDocs(window.collection(window.db, "products"));
+            productsList = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                productsList.push({
+                    id: doc.id,
+                    name: data.name,
+                    barcode: data.barcode || '',
+                    stockQty: data.stockQty !== undefined ? data.stockQty : 0,
+                    image: data.image || '',
+                    costPrice: data.costPrice || 0,
+                    unitPrice: data.unitPrice || data.price || 1.00,
+                    boxCapacity: data.boxCapacity || 12,
+                    boxPrice: data.boxPrice || (data.price ? data.price * 12 : 12.00)
+                });
+            });
+            renderProductsGrid();
         }
+    } catch (error) {
+        console.error("خطأ في تحميل المنتجات:", error);
+        if (grid) {
+            grid.innerHTML = `
+                <div class="text-center p-4 text-rose-400 text-xs bg-rose-950/20 border border-rose-500/30 rounded-xl">
+                    تعذر جلب المنتجات من Firestore (${error.code || 'خطأ اتصال'}). تحقق من صلاحيات القراءة في قواعد Firestore.
+                </div>
+            `;
+        }
+    }
+}
 
         function addProductToOrder(prodId, unitType) {
             const prod = productsList.find(p => p.id === prodId);
